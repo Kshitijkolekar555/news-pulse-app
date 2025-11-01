@@ -158,19 +158,20 @@ const Index = () => {
 
       if (response.data.articles && response.data.articles.length > 0) {
         const filteredArticles = response.data.articles.filter((a: Article) => a.title && a.description);
-        setArticles(filteredArticles); // Replace all articles with fresh data
+        const shuffledArticles = filteredArticles.sort(() => Math.random() - 0.5);
+        setArticles(shuffledArticles); // Replace all articles with fresh shuffled data
         setLastFetchTime(new Date());
 
         // Update localStorage cache
         try {
-          localStorage.setItem(`news_${category}`, JSON.stringify(filteredArticles));
+          localStorage.setItem(`news_${category}`, JSON.stringify(shuffledArticles));
         } catch {
           // Ignore localStorage errors
         }
 
         toast({
           title: "✨ News refreshed!",
-          description: `${filteredArticles.length} latest articles loaded`,
+          description: `${shuffledArticles.length} latest articles loaded (shuffled)`,
           variant: "default",
         });
       } else {

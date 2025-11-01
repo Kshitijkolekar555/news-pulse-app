@@ -1,36 +1,45 @@
-<<<<<<< HEAD
-# TODO: View More / Refresh for Latest News Feature
+# OAuth Authentication Implementation for NewsPulse App
 
-## Backend Changes
-- [x] Update Backend/routes/news.js to support pagination (page, pageSize parameters)
-- [x] Add support for fetching new articles since a timestamp (since parameter)
-- [x] Return hasMore flag or total count in response
+## Backend Implementation
 
-## Frontend Changes
-- [x] Modify Frontend/src/pages/Index.tsx to add pagination state (currentPage, hasMore, loadingMore, refreshing)
-- [x] Add Refresh button to the UI (e.g., in navbar or above news grid)
-- [x] Implement fetchMoreArticles function to load next page and append articles
-- [x] Implement refreshArticles function to fetch new articles since last load and prepend them
-- [x] Add localStorage caching for articles per category (load on mount if offline)
-- [x] Add View More button at bottom of news grid with loading state
-- [x] Ensure no duplicate articles when appending or prepending (check URLs)
-- [x] Maintain scroll position when appending new articles
-- [x] Add toast notification "✨ New stories loaded!" after successful refresh
-- [x] Add loading indicators (spinner for View More, shimmer for refresh)
-- [x] Handle errors gracefully with toast messages
-- [ ] Test and ensure mobile responsiveness
+- [ ] Install required dependencies (passport, passport-google-oauth20, passport-github2, jsonwebtoken, mongoose, bcryptjs, express-rate-limit, cookie-parser)
+- [ ] Create User mongoose model with schema (provider, providerId, email, name, avatar, preferences, bookmarks, refreshToken, linkedAccounts, timestamps)
+- [ ] Set up Passport strategies for Google and GitHub OAuth
+- [ ] Create auth middleware (requireAuth) to validate JWT cookie
+- [ ] Create auth routes (/auth/google, /auth/google/callback, /auth/github, /auth/github/callback, /auth/me, /auth/logout)
+- [ ] Create user routes (/user/preferences GET/POST)
+- [ ] Update server.js to integrate auth routes, middleware, and database connection
+- [ ] Add rate limiting to auth endpoints
+- [ ] Implement error handling and logging
 
-## Testing and Optimization
-- [x] Test pagination, refresh, and caching functionality
-- [x] Verify no duplicates and proper sorting (newest first)
-- [ ] Optimize performance for large lists
-=======
-# TODO: Remove Avatar from Profile Section
+## Frontend Implementation
 
-- [x] Remove avatar-related imports (Avatar, AvatarFallback, AvatarImage, Camera)
-- [x] Remove avatar-related state variables (avatarFile, avatarPreview)
-- [x] Remove handleAvatarChange function
-- [x] Update useEffect to not set avatarPreview
-- [x] Modify handleSave to not include avatar in form data
-- [x] Remove the Avatar Section JSX
->>>>>>> 41b0a99ef6673d708b461b1662677c8318e03b44
+- [ ] Create AuthProvider context for managing user state
+- [ ] Update or create useAuth hook to integrate with AuthProvider
+- [ ] Add login buttons (Google and GitHub) to Navbar or Auth page
+- [ ] Create ProtectedRoute component for route protection
+- [ ] Update Auth page to include OAuth buttons
+- [ ] Add user dropdown with logout functionality
+- [ ] Handle post-OAuth redirect and session check on app load
+
+## Configuration and Setup
+
+- [ ] Create .env.example with required environment variables
+- [ ] Provide step-by-step setup instructions for Google and GitHub OAuth apps
+- [ ] Document redirect URIs for local development and production
+
+## Testing and Deployment
+
+- [ ] Test OAuth flows locally (login, logout, session persistence)
+- [ ] Provide Postman test steps for backend endpoints
+- [ ] Document deployment notes (env vars, cookie settings, security)
+- [ ] Add CSRF protection explanation and implementation
+- [ ] Include bonus features if time allows (account linking, migration script)
+
+## Security and Best Practices
+
+- [ ] Ensure httpOnly, Secure, SameSite cookies
+- [ ] Implement state parameter for CSRF prevention
+- [ ] Use PKCE if applicable or server-side flow
+- [ ] Store refresh tokens securely in DB
+- [ ] Validate all inputs and handle errors gracefully
