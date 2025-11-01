@@ -44,7 +44,11 @@ const Navbar = ({
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <Newspaper className="w-6 h-6 text-accent" />
+            <span className="text-lg font-bold text-foreground">News Pulse</span>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
