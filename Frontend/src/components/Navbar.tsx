@@ -44,24 +44,7 @@ const Navbar = ({
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-3 cursor-pointer"
-            >
-              <div className="bg-gradient-to-br from-accent to-accent/80 p-2 rounded-xl shadow-lg">
-                <Newspaper className="w-6 h-6 text-accent-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  NewsPulse
-                </h1>
-                <p className="text-xs text-muted-foreground">Trending Headlines Analyzer</p>
-              </div>
-            </motion.div>
-          </Link>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
