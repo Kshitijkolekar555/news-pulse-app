@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { TrendingUp, Loader2, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import NewsCard from "@/components/NewsCard";
 import CategoryFilter from "@/components/CategoryFilter";
@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuthNew";
 import apiClient from "@/integrations/api/client";
+import { Button } from "@/components/ui/button";
 
 export interface Article {
   title: string;
@@ -27,7 +28,12 @@ const LS_KEY = "bookmarks_v1";
 const Index = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState("general");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [bookmarks, setBookmarks] = useState<Article[]>([]);
@@ -51,19 +57,51 @@ const Index = () => {
 
   useEffect(() => {
     if (user) {
-      fetchNews();
+      fetchNews(true);
+    } else {
+      // Load from localStorage if offline
+      try {
+        const cached = localStorage.getItem(`news_${category}`);
+        if (cached) {
+          const cachedArticles = JSON.parse(cached);
+          setArticles(cachedArticles);
+          setLastFetchTime(new Date()); // Set a recent time for refresh
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
     }
   }, [category, user]);
 
-  const fetchNews = async () => {
+  const fetchNews = async (reset = false) => {
+    if (reset) {
+      setCurrentPage(1);
+      setHasMore(true);
+      setLastFetchTime(null);
+    }
+
     setLoading(true);
     try {
       const response = await apiClient.get('/news', {
-        params: { category }
+        params: { category, page: reset ? 1 : currentPage, pageSize: 20 }
       });
 
       if (response.data.articles) {
-        setArticles(response.data.articles.filter((a: Article) => a.title && a.description));
+        const filteredArticles = response.data.articles.filter((a: Article) => a.title && a.description);
+        if (reset) {
+          setArticles(filteredArticles);
+        } else {
+          setArticles(prev => [...prev, ...filteredArticles]);
+        }
+        setHasMore(response.data.hasMore || false);
+        setLastFetchTime(new Date());
+
+        // Cache articles locally
+        try {
+          localStorage.setItem(`news_${category}`, JSON.stringify(filteredArticles));
+        } catch {
+          // Ignore localStorage errors
+        }
       }
     } catch (error) {
       console.error('Error fetching news:', error);
@@ -74,6 +112,83 @@ const Index = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMoreArticles = async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    const nextPage = currentPage + 1;
+    try {
+      const response = await apiClient.get('/news', {
+        params: { category, page: nextPage, pageSize: 20 }
+      });
+
+      if (response.data.articles) {
+        const filteredArticles = response.data.articles.filter((a: Article) => a.title && a.description);
+        setArticles(prev => {
+          const existingUrls = new Set(prev.map(a => a.url));
+          const newArticles = filteredArticles.filter(a => !existingUrls.has(a.url));
+          return [...prev, ...newArticles];
+        });
+        setHasMore(response.data.hasMore || false);
+        setCurrentPage(nextPage);
+      }
+    } catch (error) {
+      console.error('Error fetching more news:', error);
+      toast({
+        title: "Error loading more news",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const refreshArticles = async () => {
+    if (refreshing || !lastFetchTime) return;
+
+    setRefreshing(true);
+    try {
+      const response = await apiClient.get('/news', {
+        params: { category, since: lastFetchTime.toISOString() }
+      });
+
+      if (response.data.articles && response.data.articles.length > 0) {
+        const filteredArticles = response.data.articles.filter((a: Article) => a.title && a.description);
+        setArticles(filteredArticles); // Replace all articles with fresh data
+        setLastFetchTime(new Date());
+
+        // Update localStorage cache
+        try {
+          localStorage.setItem(`news_${category}`, JSON.stringify(filteredArticles));
+        } catch {
+          // Ignore localStorage errors
+        }
+
+        toast({
+          title: "✨ News refreshed!",
+          description: `${filteredArticles.length} latest articles loaded`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "No new articles",
+          description: "You're all caught up!",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing news:', error);
+      toast({
+        title: "Error refreshing news",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -227,9 +342,25 @@ const Index = () => {
               <h2 className="text-xl font-semibold text-foreground capitalize">
                 {category} Headlines
               </h2>
-              <span className="text-sm text-muted-foreground ml-auto">
-                {articles.length} articles
-              </span>
+              <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshArticles}
+                  disabled={refreshing || !lastFetchTime}
+                  className="gap-2"
+                >
+                  {refreshing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  Refresh
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {articles.length} articles
+                </span>
+              </div>
             </div>
 
             {loading ? (
@@ -257,6 +388,34 @@ const Index = () => {
                     />
                   </motion.div>
                 ))}
+
+                {/* View More Button */}
+                {hasMore && !loading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="col-span-full flex justify-center mt-8"
+                  >
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={fetchMoreArticles}
+                      disabled={loadingMore}
+                      className="gap-2"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          View More
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                )}
               </div>
             )}
           </>
