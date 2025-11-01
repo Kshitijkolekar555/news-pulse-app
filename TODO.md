@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TODO: View More / Refresh for Latest News Feature
 
 ## Backend Changes
@@ -23,3 +24,13 @@
 - [x] Test pagination, refresh, and caching functionality
 - [x] Verify no duplicates and proper sorting (newest first)
 - [ ] Optimize performance for large lists
+=======
+# TODO: Remove Avatar from Profile Section
+
+- [x] Remove avatar-related imports (Avatar, AvatarFallback, AvatarImage, Camera)
+- [x] Remove avatar-related state variables (avatarFile, avatarPreview)
+- [x] Remove handleAvatarChange function
+- [x] Update useEffect to not set avatarPreview
+- [x] Modify handleSave to not include avatar in form data
+- [x] Remove the Avatar Section JSX
+>>>>>>> 41b0a99ef6673d708b461b1662677c8318e03b44
